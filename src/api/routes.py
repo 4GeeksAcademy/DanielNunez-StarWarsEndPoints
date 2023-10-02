@@ -79,6 +79,45 @@ def post_FavoritePlanet(planet_id):
     db.session.commit()
     return ({'msg': "Favorito agregado"}) , 200 
 
+@api.route('/favorite/people/<int:people_id>', methods=['POST'])
+def post_FavoritePeople(people_id):
+    body = json.loads(request.data)
+    new_Favorite = Favorite(
+        user_id = body['user_id'],
+        people_id = people_id
+    )
+    db.session.add(new_Favorite)
+    db.session.commit()
+    return ({'msg': "Favorito agregado"}) , 200 
+
+@api.route('/favorite/planet/<int:planet_id>/<int:user_id>', methods=['DELETE'])
+def delete_FavoritePlanet(planet_id, user_id):
+    fav_user = Favorite.query.filter_by(user_id = user_id).first()
+    if fav_user is None: 
+        return ({'msg': "Usuario no encontrado"}) , 400 
+    fav_planet = Favorite.query.filter_by(planet_id = planet_id).first()
+    if fav_planet is None: 
+        return ({'msg': "Planeta no encontrado"}) , 400 
+    
+    favorito = Favorite.query.filter_by(user_id = user_id).filter_by(planet_id = planet_id).first()
+    db.session.delete(favorito)
+    db.session.commit()
+    return ({'msg': "Favorito eliminado"})
+
+@api.route('/favorite/people/<int:people_id>/<int:user_id>', methods=['DELETE'])
+def delete_FavoritePeopleUser(people_id, user_id):
+    fav_user = Favorite.query.filter_by(user_id = user_id).first()
+    if fav_user is None: 
+        return ({'msg': "Usuario no encontrado"}) , 400 
+    fav_people = Favorite.query.filter_by(people_id = people_id).first()
+    if fav_people is None: 
+        return ({'msg': "Planeta no encontrado"}) , 400 
+    
+    favorito = Favorite.query.filter_by(user_id = user_id).filter_by(people_id = people_id).first()
+    db.session.delete(favorito)
+    db.session.commit()
+    return ({'msg': "Favorito eliminado"})
+
 
     # favorito = Favorite.query.all()
     # resultado = list(map(lambda fav: fav.serialize(), favorito))
