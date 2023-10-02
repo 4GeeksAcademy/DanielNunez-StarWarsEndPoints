@@ -5,6 +5,11 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User,Favorite, People, Planet
 from api.utils import generate_sitemap, APIException
 import json
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+
 
 api = Blueprint('api', __name__)
 
@@ -60,6 +65,45 @@ def get_User():
     usuario = User.query.all()
     resultado = list(map(lambda usu: usu.serialize(), usuario))
     return jsonify(resultado) , 200
+
+@api.route('/user', methods=['POST'])
+def post_user():
+    body = json.loads(request.data)
+    repetido = User.query.filter_by(email = body['email']).first()
+
+    if repetido is None: 
+        new_User = User(
+            name = body['name'],
+            email = body['email'],
+            password = body['password'],
+        )
+        db.session.add(new_User)
+        db.session.commit()
+        return ({'msg': "Usuario agregado"}) , 200 
+    return ({'msg': "Usuario existente"}) , 400 
+
+@api.route('/login', methods=['POST'])
+def post_login():
+    body = json.loads(request.data)
+
+    email = request.json.get("email", None) #Formas de recibir el front
+    password = request.json.get("password", None) #Formas de recibir el front
+
+    existe = User.query.filter_by(email = email).first()
+
+    if existe is None: 
+        return ({'msg': "Usuario no existe"}) , 400
+    if email != existe.email or password != existe.password: 
+        return ({'msg': "Datos incorrectos"}) , 400
+    
+    #crea el acceso y devuelve un token a las personas al loguearse
+    access_token = create_access_token(identity=email)
+    response_body = {
+        'access_token' : access_token,
+        'user' : existe.serialize()
+    }
+    return jsonify(response_body), 200
+
 
 @api.route('/favorite', methods=['GET'])
 def get_Favorite():
