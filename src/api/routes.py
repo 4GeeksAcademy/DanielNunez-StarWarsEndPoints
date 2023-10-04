@@ -104,6 +104,11 @@ def post_login():
     }
     return jsonify(response_body), 200
 
+@api.route('/private' , methods=['GET'])
+@jwt_required()
+def private(): 
+    current_user = get_jwt_identity()
+    return jsonify(logged_int_as=current_user), 200
 
 @api.route('/favorite', methods=['GET'])
 def get_Favorite():
